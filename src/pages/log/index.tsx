@@ -52,34 +52,18 @@ const Log = ({ headerStyle, isPhone, theme }: any) => {
     request
       .get(`${config.apiPrefix}logs`)
       .then((data) => {
-        const result = formatData(data.dirs) as any;
-        setData(result);
-        setFilterData(result);
+        setData(data.data);
+        setFilterData(data.data);
       })
       .finally(() => setLoading(false));
   };
 
-  const formatData = (tree: any[]) => {
-    return tree.map((x) => {
-      x.title = x.name;
-      x.value = x.name;
-      x.disabled = x.isDir;
-      x.key = x.name;
-      x.children = x.files.map((y: string) => ({
-        title: y,
-        value: `${x.name}/${y}`,
-        key: `${x.name}/${y}`,
-        parent: x.name,
-        isLeaf: true,
-      }));
-      return x;
-    });
-  };
-
   const getLog = (node: any) => {
-    request.get(`${config.apiPrefix}logs/${node.value}`).then((data) => {
-      setValue(data.data);
-    });
+    request
+      .get(`${config.apiPrefix}logs/${node.title}?path=${node.parent || ''}`)
+      .then((data) => {
+        setValue(data.data);
+      });
   };
 
   const onSelect = (value: any, node: any) => {
@@ -88,7 +72,7 @@ const Log = ({ headerStyle, isPhone, theme }: any) => {
     }
     setValue('加载中...');
     setSelect(value);
-    setTitle(node.parent || node.value);
+    setTitle(node.key);
     getLog(node);
   };
 
@@ -128,7 +112,8 @@ const Log = ({ headerStyle, isPhone, theme }: any) => {
             value={select}
             dropdownStyle={{ maxHeight: 400, overflow: 'auto' }}
             treeData={data}
-            placeholder="请选择日志文件"
+            placeholder="请选择日志"
+            fieldNames={{ value: 'key', label: 'title' }}
             showSearch
             onSelect={onSelect}
           />,
@@ -147,6 +132,8 @@ const Log = ({ headerStyle, isPhone, theme }: any) => {
                   <Input.Search
                     className={styles['left-tree-search']}
                     onChange={onSearch}
+                    placeholder="请输入日志名"
+                    allowClear
                   ></Input.Search>
                   <div className={styles['left-tree-scroller']} ref={treeDom}>
                     <Tree

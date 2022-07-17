@@ -28,8 +28,12 @@ export default class EnvService {
   }
 
   public async insert(payloads: Env[]): Promise<Env[]> {
-    const docs = await EnvModel.bulkCreate(payloads);
-    return docs;
+    const result = [];
+    for (const env of payloads) {
+      const doc = await EnvModel.create(env, { returning: true });
+      result.push(doc);
+    }
+    return result;
   }
 
   public async update(payload: Env): Promise<Env> {
@@ -45,6 +49,7 @@ export default class EnvService {
 
   public async remove(ids: string[]) {
     await EnvModel.destroy({ where: { id: ids } });
+    await this.set_envs();
   }
 
   public async move(
@@ -163,13 +168,11 @@ export default class EnvService {
             .filter((x) => x.status !== EnvStatus.disabled)
             .map('value')
             .join('&')
-            .replace(/ /g, '');
-          if (/"/.test(value)) {
-            value = `'${value}'`;
-          } else {
-            value = `"${value}"`;
-          }
-          env_string += `export ${key}=${value}\n`;
+            .replace(/(\\)[^\n]/g, '\\\\')
+            .replace(/(\\$)/, '\\\\')
+            .replace(/"/g, '\\"')
+            .trim();
+          env_string += `export ${key}="${value}"\n`;
         }
       }
     }

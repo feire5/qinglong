@@ -172,16 +172,16 @@ const CheckUpdate = ({ socketMessage }: any) => {
             <Countdown
               className="inline-countdown"
               format="ss"
-              value={Date.now() + 1000 * 10}
+              value={Date.now() + 1000 * 30}
             />
             秒后自动刷新
           </span>
         ),
-        duration: 10,
+        duration: 30,
       });
       setTimeout(() => {
         window.location.reload();
-      }, 10000);
+      }, 30000);
     }
   }, [socketMessage]);
 
